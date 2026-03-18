@@ -1,0 +1,880 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SuiviMicro — L'assistant URSSAF de l'auto-entrepreneur</title>
+  <meta name="description" content="Suivez votre chiffre d'affaires, calculez vos cotisations URSSAF et connaissez votre revenu net. Conçu pour les auto-entrepreneurs français." />
+  <meta property="og:title" content="SuiviMicro — L'assistant URSSAF de l'auto-entrepreneur" />
+  <meta property="og:description" content="Fini les surprises URSSAF. CA, cotisations et net toujours à jour." />
+  <meta property="og:image" content="screenshots/home.png" />
+  <link rel="icon" type="image/svg+xml" href="app-icon.svg" />
+  <style>
+    :root {
+      --bg: #0D0D14;
+      --bg2: #111827;
+      --surface: #161626;
+      --surface2: rgba(255,255,255,0.04);
+      --indigo: #2D3A8C;
+      --indigo-light: #4F63D2;
+      --indigo-glow: rgba(79,99,210,0.15);
+      --text: #F0F4FF;
+      --muted: #8892B0;
+      --muted2: #5a6480;
+      --green: #6EE7B7;
+      --border: rgba(255,255,255,0.08);
+      --border2: rgba(255,255,255,0.12);
+      --radius: 16px;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', sans-serif;
+      line-height: 1.6;
+      overflow-x: hidden;
+    }
+    a { color: inherit; text-decoration: none; }
+
+    /* NAV */
+    nav {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: rgba(13,13,20,0.85);
+      backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 5%;
+      height: 64px;
+    }
+    .nav-brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: 700;
+      font-size: 18px;
+      letter-spacing: -0.3px;
+    }
+    .nav-brand img {
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+    }
+    .nav-links {
+      display: flex;
+      align-items: center;
+      gap: 28px;
+    }
+    .nav-links a {
+      font-size: 14px;
+      color: var(--muted);
+      transition: color 0.2s;
+    }
+    .nav-links a:hover { color: var(--text); }
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--indigo-light);
+      color: #fff;
+      padding: 10px 22px;
+      border-radius: 50px;
+      font-weight: 700;
+      font-size: 14px;
+      transition: opacity 0.2s, transform 0.15s;
+      white-space: nowrap;
+    }
+    .btn:hover { opacity: 0.9; transform: translateY(-1px); }
+    .btn.outline {
+      background: transparent;
+      border: 1.5px solid var(--indigo-light);
+      color: var(--indigo-light);
+    }
+    .btn-lg {
+      padding: 14px 32px;
+      font-size: 16px;
+      border-radius: 50px;
+    }
+
+    /* HERO */
+    .hero {
+      min-height: 90vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 80px 5% 60px;
+      position: relative;
+      overflow: hidden;
+    }
+    .hero-glow {
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(120px);
+      pointer-events: none;
+    }
+    .hero-glow-1 {
+      width: 600px; height: 600px;
+      background: rgba(45,58,140,0.5);
+      top: -100px; left: -150px;
+    }
+    .hero-glow-2 {
+      width: 500px; height: 500px;
+      background: rgba(79,99,210,0.35);
+      top: 100px; right: -100px;
+    }
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--indigo-glow);
+      border: 1px solid var(--indigo-light);
+      border-radius: 50px;
+      padding: 6px 16px;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--indigo-light);
+      margin-bottom: 28px;
+      position: relative;
+    }
+    .hero h1 {
+      font-size: clamp(40px, 7vw, 80px);
+      font-weight: 800;
+      line-height: 1.05;
+      letter-spacing: -2px;
+      position: relative;
+      max-width: 800px;
+      margin-bottom: 24px;
+    }
+    .hero h1 .accent { color: var(--indigo-light); }
+    .hero-sub {
+      font-size: clamp(16px, 2vw, 20px);
+      color: var(--muted);
+      max-width: 520px;
+      margin-bottom: 40px;
+      position: relative;
+    }
+    .hero-cta {
+      display: flex;
+      gap: 14px;
+      flex-wrap: wrap;
+      justify-content: center;
+      position: relative;
+      margin-bottom: 64px;
+    }
+    .app-store-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      background: var(--text);
+      color: #0D0D14;
+      padding: 12px 24px;
+      border-radius: 14px;
+      font-weight: 700;
+      font-size: 15px;
+      transition: opacity 0.2s, transform 0.15s;
+    }
+    .app-store-btn:hover { opacity: 0.9; transform: translateY(-1px); }
+    .app-store-btn svg { flex-shrink: 0; }
+    .hero-screenshots {
+      display: flex;
+      gap: 16px;
+      justify-content: center;
+      align-items: flex-end;
+      position: relative;
+    }
+    .phone-frame {
+      background: #1a1a2e;
+      border-radius: 36px;
+      border: 2px solid rgba(255,255,255,0.1);
+      overflow: hidden;
+      box-shadow: 0 40px 100px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.05);
+      flex-shrink: 0;
+    }
+    .phone-frame img {
+      display: block;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      object-position: top;
+    }
+    .phone-main { width: 220px; height: 476px; }
+    .phone-side {
+      width: 180px; height: 390px;
+      opacity: 0.55;
+      transform: scale(0.95);
+    }
+
+    /* SECTION SHARED */
+    section { padding: 100px 5%; }
+    .section-label {
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--indigo-light);
+      margin-bottom: 14px;
+    }
+    .section-title {
+      font-size: clamp(28px, 4vw, 48px);
+      font-weight: 800;
+      letter-spacing: -1px;
+      line-height: 1.1;
+      margin-bottom: 16px;
+    }
+    .section-sub {
+      font-size: 17px;
+      color: var(--muted);
+      max-width: 520px;
+      line-height: 1.7;
+    }
+    .section-header { margin-bottom: 56px; }
+    .section-header.centered { text-align: center; }
+    .section-header.centered .section-sub { margin: 0 auto; }
+
+    /* FEATURES */
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 16px;
+    }
+    .feature-card {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 28px;
+      transition: border-color 0.2s, transform 0.2s;
+    }
+    .feature-card:hover {
+      border-color: var(--indigo-light);
+      transform: translateY(-2px);
+    }
+    .feature-icon {
+      width: 44px;
+      height: 44px;
+      background: var(--indigo-glow);
+      border: 1px solid rgba(79,99,210,0.3);
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 16px;
+    }
+    .feature-card h3 {
+      font-size: 16px;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+    .feature-card p {
+      font-size: 14px;
+      color: var(--muted);
+      line-height: 1.6;
+    }
+    .feature-card.vip {
+      border-color: rgba(79,99,210,0.3);
+      background: linear-gradient(135deg, rgba(45,58,140,0.15), rgba(13,13,20,0.8));
+    }
+    .vip-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      background: var(--indigo);
+      color: #fff;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+      padding: 3px 8px;
+      border-radius: 50px;
+      margin-left: 8px;
+      vertical-align: middle;
+    }
+
+    /* SCREENSHOTS */
+    .screenshots-section { background: var(--bg2); }
+    .screenshots-scroll {
+      display: flex;
+      gap: 20px;
+      overflow-x: auto;
+      padding-bottom: 16px;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: thin;
+      scrollbar-color: var(--indigo) transparent;
+    }
+    .screenshots-scroll::-webkit-scrollbar { height: 4px; }
+    .screenshots-scroll::-webkit-scrollbar-track { background: transparent; }
+    .screenshots-scroll::-webkit-scrollbar-thumb { background: var(--indigo); border-radius: 2px; }
+    .screenshot-item {
+      flex-shrink: 0;
+      background: #1a1a2e;
+      border-radius: 28px;
+      border: 1.5px solid rgba(255,255,255,0.1);
+      overflow: hidden;
+      width: 180px;
+      height: 390px;
+      box-shadow: 0 24px 60px rgba(0,0,0,0.5);
+    }
+    .screenshot-item img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      object-position: top;
+    }
+
+    /* PRICING */
+    .pricing-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 16px;
+      max-width: 900px;
+      margin: 0 auto;
+    }
+    .plan-card {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 32px 28px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      transition: transform 0.2s;
+    }
+    .plan-card:hover { transform: translateY(-3px); }
+    .plan-card.featured {
+      background: linear-gradient(135deg, var(--indigo), #3D4FA8);
+      border-color: var(--indigo-light);
+      box-shadow: 0 0 60px rgba(45,58,140,0.4);
+    }
+    .plan-featured-badge {
+      display: inline-block;
+      background: rgba(255,255,255,0.2);
+      color: #fff;
+      font-size: 11px;
+      font-weight: 700;
+      padding: 4px 10px;
+      border-radius: 50px;
+      margin-bottom: -8px;
+      align-self: flex-start;
+    }
+    .plan-name {
+      font-size: 18px;
+      font-weight: 700;
+      margin-bottom: 4px;
+    }
+    .plan-card.featured .plan-name { color: #fff; }
+    .plan-price-row {
+      display: flex;
+      align-items: baseline;
+      gap: 4px;
+    }
+    .plan-price {
+      font-size: 36px;
+      font-weight: 800;
+      letter-spacing: -1px;
+    }
+    .plan-card.featured .plan-price { color: #fff; }
+    .plan-period {
+      font-size: 14px;
+      color: var(--muted);
+    }
+    .plan-card.featured .plan-period { color: rgba(255,255,255,0.7); }
+    .plan-desc {
+      font-size: 13px;
+      color: var(--muted);
+      line-height: 1.6;
+    }
+    .plan-card.featured .plan-desc { color: rgba(255,255,255,0.7); }
+    .plan-cta {
+      display: block;
+      text-align: center;
+      padding: 13px;
+      border-radius: 12px;
+      font-weight: 700;
+      font-size: 15px;
+      background: var(--indigo-light);
+      color: #fff;
+      transition: opacity 0.2s;
+    }
+    .plan-card.featured .plan-cta {
+      background: rgba(255,255,255,0.2);
+    }
+    .plan-cta:hover { opacity: 0.85; }
+    .pricing-note {
+      text-align: center;
+      margin-top: 28px;
+      font-size: 13px;
+      color: var(--muted2);
+      line-height: 1.7;
+    }
+    .pricing-note a { color: var(--indigo-light); }
+
+    /* HOW IT WORKS */
+    .steps {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 32px;
+      counter-reset: steps;
+    }
+    .step {
+      counter-increment: steps;
+      position: relative;
+      padding-left: 60px;
+    }
+    .step::before {
+      content: counter(steps);
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 40px;
+      height: 40px;
+      background: var(--indigo-glow);
+      border: 1px solid var(--indigo-light);
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+      font-weight: 800;
+      color: var(--indigo-light);
+      display: flex;
+    }
+    .step h3 { font-size: 17px; font-weight: 700; margin-bottom: 8px; }
+    .step p { font-size: 14px; color: var(--muted); line-height: 1.6; }
+
+    /* TRUST */
+    .trust-bar {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 40px;
+      padding: 60px 5%;
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+    }
+    .trust-item {
+      text-align: center;
+    }
+    .trust-value {
+      font-size: 32px;
+      font-weight: 800;
+      color: var(--indigo-light);
+      letter-spacing: -1px;
+    }
+    .trust-label {
+      font-size: 13px;
+      color: var(--muted);
+      margin-top: 4px;
+    }
+
+    /* CTA SECTION */
+    .cta-section {
+      text-align: center;
+      background: linear-gradient(160deg, #0a0f2e, #0D0D14 60%, #0D1240);
+      position: relative;
+      overflow: hidden;
+    }
+    .cta-section .hero-glow-1 {
+      top: -200px; left: 50%; transform: translateX(-50%);
+    }
+
+    /* FOOTER */
+    footer {
+      padding: 48px 5%;
+      border-top: 1px solid var(--border);
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 20px;
+    }
+    .footer-brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: 700;
+      font-size: 15px;
+    }
+    .footer-brand img {
+      width: 28px;
+      height: 28px;
+      border-radius: 6px;
+    }
+    .footer-links {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 24px;
+    }
+    .footer-links a {
+      font-size: 13px;
+      color: var(--muted);
+      transition: color 0.2s;
+    }
+    .footer-links a:hover { color: var(--text); }
+    .footer-copy {
+      font-size: 12px;
+      color: var(--muted2);
+      width: 100%;
+      text-align: center;
+      margin-top: 8px;
+    }
+
+    @media (max-width: 640px) {
+      nav { padding: 0 16px; }
+      .nav-links { display: none; }
+      section { padding: 64px 16px; }
+      .hero { padding: 60px 16px 40px; min-height: auto; }
+      .phone-side { display: none; }
+      .phone-main { width: 200px; height: 433px; }
+      footer { padding: 32px 16px; flex-direction: column; align-items: flex-start; }
+      .trust-bar { gap: 24px; padding: 40px 16px; }
+      .step { padding-left: 52px; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <a href="#" class="nav-brand">
+    <img src="app-icon.svg" alt="SuiviMicro" />
+    SuiviMicro
+  </a>
+  <div class="nav-links">
+    <a href="#fonctionnalites">Fonctionnalités</a>
+    <a href="#captures">Captures</a>
+    <a href="#tarifs">Tarifs</a>
+    <a href="#contact">Contact</a>
+  </div>
+  <a href="#tarifs" class="btn">Télécharger</a>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-glow hero-glow-1"></div>
+  <div class="hero-glow hero-glow-2"></div>
+
+  <div class="hero-badge">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+      <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+    </svg>
+    Taux URSSAF 2025 officiels
+  </div>
+
+  <h1>Fini les surprises<br /><span class="accent">URSSAF.</span></h1>
+  <p class="hero-sub">Suivez votre chiffre d'affaires, calculez vos cotisations et connaissez votre revenu net — sans tableur, sans surprise.</p>
+
+  <div class="hero-cta">
+    <a href="https://apps.apple.com" class="app-store-btn">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+        <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11"/>
+      </svg>
+      Disponible sur l'App Store
+    </a>
+  </div>
+
+  <div class="hero-screenshots">
+    <div class="phone-frame phone-side">
+      <img src="screenshots/dashboard.png" alt="Dashboard URSSAF" loading="lazy" />
+    </div>
+    <div class="phone-frame phone-main">
+      <img src="screenshots/home.png" alt="Accueil SuiviMicro" />
+    </div>
+    <div class="phone-frame phone-side">
+      <img src="screenshots/stats.png" alt="Statistiques" loading="lazy" />
+    </div>
+  </div>
+</section>
+
+<!-- TRUST -->
+<div class="trust-bar">
+  <div class="trust-item">
+    <div class="trust-value">100%</div>
+    <div class="trust-label">Local — aucun cloud</div>
+  </div>
+  <div class="trust-item">
+    <div class="trust-value">2025</div>
+    <div class="trust-label">Taux URSSAF officiels</div>
+  </div>
+  <div class="trust-item">
+    <div class="trust-value">4</div>
+    <div class="trust-label">Types d'activité supportés</div>
+  </div>
+  <div class="trust-item">
+    <div class="trust-value">0</div>
+    <div class="trust-label">Compte requis</div>
+  </div>
+</div>
+
+<!-- FEATURES -->
+<section id="fonctionnalites">
+  <div class="section-header">
+    <div class="section-label">Fonctionnalités</div>
+    <h2 class="section-title">Tout ce dont vous avez besoin,<br />rien de plus.</h2>
+    <p class="section-sub">SuiviMicro est conçu pour aller à l'essentiel. Pas de complexité inutile — juste vos chiffres, clairs et justes.</p>
+  </div>
+
+  <div class="features-grid">
+    <div class="feature-card">
+      <div class="feature-icon">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#4F63D2" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/>
+        </svg>
+      </div>
+      <h3>Dashboard en temps réel</h3>
+      <p>CA, cotisations URSSAF et revenu net par période de déclaration — mensuelle ou trimestrielle.</p>
+    </div>
+
+    <div class="feature-card">
+      <div class="feature-icon">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#4F63D2" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/>
+        </svg>
+      </div>
+      <h3>Ajout de factures rapide</h3>
+      <p>Titre, client, montant, date et pièce jointe (PDF ou photo). Saisie en moins de 10 secondes.</p>
+    </div>
+
+    <div class="feature-card">
+      <div class="feature-icon">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#4F63D2" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+        </svg>
+      </div>
+      <h3>Calcul URSSAF automatique</h3>
+      <p>Taux 2025 officiels pour BIC Services, BNC, Commerce et Professions libérales. Versement libératoire inclus.</p>
+    </div>
+
+    <div class="feature-card">
+      <div class="feature-icon">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#4F63D2" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+        </svg>
+      </div>
+      <h3>Navigation par période</h3>
+      <p>Consultez n'importe quelle période passée ou présente avec les flèches de navigation.</p>
+    </div>
+
+    <div class="feature-card vip">
+      <div class="feature-icon">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#6EE7B7" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+        </svg>
+      </div>
+      <h3>Pas de publicités <span class="vip-badge">VIP</span></h3>
+      <p>Une expérience sans interruption, entièrement épurée.</p>
+    </div>
+
+    <div class="feature-card vip">
+      <div class="feature-icon">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#6EE7B7" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/>
+        </svg>
+      </div>
+      <h3>Export PDF &amp; CSV <span class="vip-badge">VIP</span></h3>
+      <p>Rapport annuel complet et export compatible Excel — pour votre comptable ou vos archives.</p>
+    </div>
+
+    <div class="feature-card vip">
+      <div class="feature-icon">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#6EE7B7" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+        </svg>
+      </div>
+      <h3>Alertes URSSAF <span class="vip-badge">VIP</span></h3>
+      <p>Recevez un rappel avant chaque échéance de déclaration. Ne manquez plus jamais une date.</p>
+    </div>
+
+    <div class="feature-card vip">
+      <div class="feature-icon">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#6EE7B7" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="2" y="3" width="6" height="6" rx="1"/><rect x="9" y="3" width="6" height="6" rx="1"/><rect x="16" y="3" width="6" height="6" rx="1"/><rect x="2" y="10" width="6" height="6" rx="1"/><rect x="9" y="10" width="6" height="6" rx="1"/><rect x="2" y="17" width="6" height="6" rx="1"/>
+        </svg>
+      </div>
+      <h3>Widgets iOS <span class="vip-badge">VIP</span></h3>
+      <p>CA, net et cotisations directement sur votre écran d'accueil.</p>
+    </div>
+
+    <div class="feature-card vip">
+      <div class="feature-icon">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#6EE7B7" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/>
+        </svg>
+      </div>
+      <h3>Backup &amp; restauration <span class="vip-badge">VIP</span></h3>
+      <p>Sauvegardez et restaurez toutes vos données en un seul clic.</p>
+    </div>
+  </div>
+</section>
+
+<!-- SCREENSHOTS -->
+<section class="screenshots-section" id="captures">
+  <div class="section-header centered">
+    <div class="section-label">Captures d'écran</div>
+    <h2 class="section-title">Voyez l'application<br />en action</h2>
+  </div>
+
+  <div class="screenshots-scroll">
+    <div class="screenshot-item"><img src="screenshots/home.png" alt="Accueil" loading="lazy" /></div>
+    <div class="screenshot-item"><img src="screenshots/dashboard.png" alt="Dashboard" loading="lazy" /></div>
+    <div class="screenshot-item"><img src="screenshots/add-invoice.png" alt="Ajout facture" loading="lazy" /></div>
+    <div class="screenshot-item"><img src="screenshots/stats.png" alt="Statistiques" loading="lazy" /></div>
+    <div class="screenshot-item"><img src="screenshots/import.png" alt="Import" loading="lazy" /></div>
+    <div class="screenshot-item"><img src="screenshots/barchart.png" alt="Graphiques" loading="lazy" /></div>
+  </div>
+</section>
+
+<!-- HOW IT WORKS -->
+<section>
+  <div class="section-header">
+    <div class="section-label">Comment ça marche</div>
+    <h2 class="section-title">Prêt en 2 minutes.</h2>
+    <p class="section-sub">Aucun compte, aucune configuration complexe. Lancez l'app et commencez.</p>
+  </div>
+
+  <div class="steps">
+    <div class="step">
+      <h3>Configurez votre activité</h3>
+      <p>Choisissez votre type d'activité (BIC, BNC, Commerce, Libéral) et votre fréquence de déclaration.</p>
+    </div>
+    <div class="step">
+      <h3>Saisissez vos factures</h3>
+      <p>Ajoutez une facture en quelques secondes. Importez un PDF, une photo, ou saisissez manuellement.</p>
+    </div>
+    <div class="step">
+      <h3>Consultez vos chiffres</h3>
+      <p>Le dashboard affiche instantanément votre CA, vos cotisations dues et votre revenu net réel.</p>
+    </div>
+    <div class="step">
+      <h3>Déclarez en confiance</h3>
+      <p>Exportez votre rapport PDF pour votre comptable ou déclarez directement avec vos chiffres exacts.</p>
+    </div>
+  </div>
+</section>
+
+<!-- PRICING -->
+<section id="tarifs" style="background: var(--bg2);">
+  <div class="section-header centered">
+    <div class="section-label">Tarifs</div>
+    <h2 class="section-title">Simple et transparent.</h2>
+    <p class="section-sub">Commencez gratuitement. Passez VIP quand vous êtes prêt.</p>
+  </div>
+
+  <div class="pricing-grid">
+    <div class="plan-card">
+      <div>
+        <div class="plan-name">Gratuit</div>
+        <p style="font-size:13px;color:var(--muted);margin-top:4px;">Pour commencer sans engagement</p>
+      </div>
+      <div class="plan-price-row">
+        <span class="plan-price">0 €</span>
+        <span class="plan-period">pour toujours</span>
+      </div>
+      <ul style="list-style:none;display:flex;flex-direction:column;gap:10px;font-size:14px;color:var(--muted);">
+        <li>✓ Suivi CA & cotisations URSSAF</li>
+        <li>✓ Ajout de factures illimité</li>
+        <li>✓ Navigation par période</li>
+        <li>✓ 5 imports OCR par mois</li>
+        <li>✓ Mode sombre</li>
+      </ul>
+      <a href="https://apps.apple.com" class="plan-cta">Télécharger</a>
+    </div>
+
+    <div class="plan-card featured">
+      <span class="plan-featured-badge">⭐ Meilleure offre</span>
+      <div>
+        <div class="plan-name">Annuel</div>
+        <p style="font-size:13px;color:rgba(255,255,255,0.7);margin-top:4px;">Le choix le plus économique</p>
+      </div>
+      <div class="plan-price-row">
+        <span class="plan-price">24,99 €</span>
+        <span class="plan-period">/an</span>
+      </div>
+      <ul style="list-style:none;display:flex;flex-direction:column;gap:10px;font-size:14px;color:rgba(255,255,255,0.8);">
+        <li>✓ Tout le gratuit</li>
+        <li>✓ Import OCR illimité</li>
+        <li>✓ Zéro publicité</li>
+        <li>✓ Export PDF &amp; CSV</li>
+        <li>✓ Alertes URSSAF</li>
+        <li>✓ Statistiques comparées</li>
+        <li>✓ Backup &amp; restauration</li>
+        <li>✓ Widgets iOS</li>
+      </ul>
+      <a href="https://apps.apple.com" class="plan-cta">Choisir Annuel</a>
+    </div>
+
+    <div class="plan-card">
+      <div>
+        <div class="plan-name">Mensuel</div>
+        <p style="font-size:13px;color:var(--muted);margin-top:4px;">Flexible, sans engagement annuel</p>
+      </div>
+      <div class="plan-price-row">
+        <span class="plan-price">2,99 €</span>
+        <span class="plan-period">/mois</span>
+      </div>
+      <ul style="list-style:none;display:flex;flex-direction:column;gap:10px;font-size:14px;color:var(--muted);">
+        <li>✓ Toutes les fonctionnalités VIP</li>
+        <li style="opacity:0.5">— Moins économique qu'annuel</li>
+      </ul>
+      <a href="https://apps.apple.com" class="plan-cta">Choisir Mensuel</a>
+    </div>
+
+    <div class="plan-card">
+      <div>
+        <div class="plan-name">À vie</div>
+        <p style="font-size:13px;color:var(--muted);margin-top:4px;">Payez une fois, profitez toujours</p>
+      </div>
+      <div class="plan-price-row">
+        <span class="plan-price">49,99 €</span>
+        <span class="plan-period">une fois</span>
+      </div>
+      <ul style="list-style:none;display:flex;flex-direction:column;gap:10px;font-size:14px;color:var(--muted);">
+        <li>✓ Toutes les fonctionnalités VIP</li>
+        <li>✓ Mises à jour incluses à vie</li>
+        <li>✓ Aucun abonnement récurrent</li>
+      </ul>
+      <a href="https://apps.apple.com" class="plan-cta">Acheter À vie</a>
+    </div>
+  </div>
+
+  <p class="pricing-note">
+    L'abonnement se renouvelle automatiquement. Annulable à tout moment depuis les Réglages de l'App Store.<br />
+    Achat à vie non remboursable. En achetant, vous acceptez nos <a href="terms.html">Conditions d'utilisation</a> et notre <a href="privacy.html">Politique de confidentialité</a>.
+  </p>
+</section>
+
+<!-- CTA -->
+<section class="cta-section" id="contact">
+  <div class="hero-glow hero-glow-1" style="width:500px;height:500px;top:-200px;left:50%;transform:translateX(-50%);"></div>
+  <div class="section-header centered" style="margin-bottom:40px;">
+    <h2 class="section-title">Arrêtez de deviner.<br />Commencez à savoir.</h2>
+    <p class="section-sub" style="margin-top:16px;">Téléchargez SuiviMicro gratuitement et prenez le contrôle de vos finances d'auto-entrepreneur dès aujourd'hui.</p>
+  </div>
+  <a href="https://apps.apple.com" class="app-store-btn btn-lg" style="display:inline-flex;background:var(--text);color:#0D0D14;padding:14px 32px;border-radius:14px;font-weight:700;font-size:16px;gap:10px;transition:opacity 0.2s,transform 0.15s;">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor">
+      <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11"/>
+    </svg>
+    Disponible sur l'App Store
+  </a>
+  <p style="margin-top:20px;font-size:13px;color:var(--muted2);">Contact : <a href="mailto:aatmdmt@gmail.com" style="color:var(--indigo-light);">aatmdmt@gmail.com</a></p>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-brand">
+    <img src="app-icon.svg" alt="SuiviMicro" />
+    SuiviMicro
+  </div>
+  <div class="footer-links">
+    <a href="privacy.html">Politique de confidentialité</a>
+    <a href="terms.html">Conditions d'utilisation</a>
+    <a href="mailto:aatmdmt@gmail.com">Support</a>
+  </div>
+  <p class="footer-copy">© 2025 Mathys Thévenot. Tous droits réservés.</p>
+</footer>
+
+</body>
+</html>
